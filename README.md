@@ -1,81 +1,160 @@
 FutbolX Media Server
 
-A self-hosted media streaming server built with FastAPI, FFmpeg, HLS, Nginx, and a web dashboard.
+Self-hosted media streaming server using FastAPI, FFmpeg, HLS, Nginx, and Systemd.
 
-This guide is designed so that FutbolX can be installed from scratch on a new VPS without needing to remember the previous setup.
+This README is written as a from-scratch installation and migration manual.
+
+The goal is simple:
+
+«If you get a completely new VPS, you should be able to open this README and rebuild FutbolX without needing to remember anything from the previous server.»
 
 ---
 
-Table of Contents
+🚦 HOW TO READ THIS README
+
+Before doing anything, understand the labels used throughout this guide.
+
+🟢 COPY & RUN
+
+Whenever you see this:
+
+🟢 COPY & RUN
+
+Copy the command(s) inside the following code block and paste them directly into your VPS terminal.
+
+Example:
+
+apt update && apt upgrade -y
+
+---
+
+🔵 CREATE / EDIT FILE
+
+Whenever you see:
+
+🔵 CREATE / EDIT FILE
+
+You will be told:
+
+1. Which file to open.
+2. Exactly what content to put inside it.
+3. How to save it.
+
+For example:
+
+nano /etc/nginx/sites-available/futbolx
+
+Then you will be told to paste the configuration provided below that command.
+
+---
+
+🟡 EDIT THIS
+
+Whenever you see:
+
+🟡 EDIT THIS
+
+You must replace the example value with your own value.
+
+For example:
+
+YOUR_SERVER_IP
+YOUR_DOMAIN
+YOUR_STREAM_SOURCE
+
+Do not literally paste "YOUR_SERVER_IP" unless the command specifically tells you to.
+
+---
+
+⚪ EXPLANATION
+
+Anything outside a command block is normally an explanation.
+
+You don't need to copy the explanation into the VPS.
+
+---
+
+🔴 EXPECTED RESULT
+
+Anything marked as an expected result is something you should see after running a command.
+
+Do not copy the expected result into the terminal.
+
+---
+
+TABLE OF CONTENTS
 
 1. "What FutbolX Does" (#1-what-futbolx-does)
 2. "VPS Requirements" (#2-vps-requirements)
-3. "Fresh VPS Preparation" (#3-fresh-vps-preparation)
-4. "Install Required Software" (#4-install-required-software)
-5. "Install Git" (#5-install-git)
-6. "Install Python" (#6-install-python)
-7. "Install FFmpeg" (#7-install-ffmpeg)
-8. "Install Nginx" (#8-install-nginx)
-9. "Install Certbot" (#9-install-certbot)
-10. "Clone FutbolX" (#10-clone-futbolx)
-11. "Create Required Directories" (#11-create-required-directories)
-12. "Create Python Virtual Environment" (#12-create-python-virtual-environment)
-13. "Install Python Dependencies" (#13-install-python-dependencies)
-14. "Test FutbolX Manually" (#14-test-futbolx-manually)
-15. "Configure Nginx" (#15-configure-nginx)
-16. "Configure DNS" (#16-configure-dns)
-17. "Create Systemd Service" (#17-create-systemd-service)
-18. "Start FutbolX" (#18-start-futbolx)
-19. "Configure Firewall" (#19-configure-firewall)
-20. "Configure HTTPS / SSL" (#20-configure-https--ssl)
-21. "Verify Installation" (#21-verify-installation)
-22. "Using the Dashboard" (#22-using-the-dashboard)
-23. "Creating a Live Stream" (#23-creating-a-live-stream)
-24. "Scheduling a Stream" (#24-scheduling-a-stream)
-25. "Starting a Scheduled Stream" (#25-starting-a-scheduled-stream)
-26. "Stopping a Stream" (#26-stopping-a-stream)
-27. "Copying an M3U8 URL" (#27-copying-an-m3u8-url)
-28. "Stream Health" (#28-stream-health)
-29. "Server Logs" (#29-server-logs)
-30. "Restarting FutbolX" (#30-restarting-futbolx)
-31. "Stopping FutbolX" (#31-stopping-futbolx)
-32. "Updating FutbolX" (#32-updating-futbolx)
-33. "Moving FutbolX to Another VPS" (#33-moving-futbolx-to-another-vps)
-34. "Backing Up FutbolX" (#34-backing-up-futbolx)
-35. "Restoring FutbolX" (#35-restoring-futbolx)
-36. "Troubleshooting" (#36-troubleshooting)
-37. "Useful Commands" (#37-useful-commands)
-38. "Project Structure" (#38-project-structure)
-39. "Production Architecture" (#39-production-architecture)
-40. "Security Notes" (#40-security-notes)
+3. "Important Values" (#3-important-values)
+4. "Fresh VPS Preparation" (#4-fresh-vps-preparation)
+5. "Install Required Software" (#5-install-required-software)
+6. "Verify Git" (#6-verify-git)
+7. "Verify Python" (#7-verify-python)
+8. "Verify FFmpeg" (#8-verify-ffmpeg)
+9. "Install and Start Nginx" (#9-install-and-start-nginx)
+10. "Install Certbot" (#10-install-certbot)
+11. "Clone FutbolX" (#11-clone-futbolx)
+12. "Create Required Directories" (#12-create-required-directories)
+13. "Create Python Virtual Environment" (#13-create-python-virtual-environment)
+14. "Install Python Dependencies" (#14-install-python-dependencies)
+15. "Test FutbolX Manually" (#15-test-futbolx-manually)
+16. "Configure Nginx" (#16-configure-nginx)
+17. "Configure DNS" (#17-configure-dns)
+18. "Create Systemd Service" (#18-create-systemd-service)
+19. "Start FutbolX" (#19-start-futbolx)
+20. "Configure Firewall" (#20-configure-firewall)
+21. "Configure HTTPS / SSL" (#21-configure-https--ssl)
+22. "Verify Installation" (#22-verify-installation)
+23. "Using the Dashboard" (#23-using-the-dashboard)
+24. "Creating a Live Stream" (#24-creating-a-live-stream)
+25. "Scheduling a Stream" (#25-scheduling-a-stream)
+26. "Starting a Scheduled Stream" (#26-starting-a-scheduled-stream)
+27. "Stopping a Stream" (#27-stopping-a-stream)
+28. "Copying an M3U8 URL" (#28-copying-an-m3u8-url)
+29. "Stream Health" (#29-stream-health)
+30. "Server Logs" (#30-server-logs)
+31. "Restarting FutbolX" (#31-restarting-futbolx)
+32. "Stopping FutbolX" (#32-stopping-futbolx)
+33. "Updating FutbolX" (#33-updating-futbolx)
+34. "Moving FutbolX to Another VPS" (#34-moving-futbolx-to-another-vps)
+35. "Backing Up FutbolX" (#35-backing-up-futbolx)
+36. "Restoring FutbolX" (#36-restoring-futbolx)
+37. "Troubleshooting" (#37-troubleshooting)
+38. "Useful Commands" (#38-useful-commands)
+39. "Project Structure" (#39-project-structure)
+40. "Production Architecture" (#40-production-architecture)
+41. "Security Notes" (#41-security-notes)
+42. "Complete Fresh VPS Installation" (#42-complete-fresh-vps-installation)
+43. "Final Installation Checklist" (#43-final-installation-checklist)
+44. "Important Paths" (#44-important-paths)
+45. "Quick Migration Formula" (#45-quick-migration-formula)
 
 ---
 
 1. What FutbolX Does
 
-FutbolX is a self-hosted streaming server.
+FutbolX is a self-hosted media streaming server.
 
-The server accepts a media source and uses FFmpeg to convert the incoming stream into HLS.
+The basic flow is:
 
-The generated HLS files are served through Nginx.
+MEDIA SOURCE
+     |
+     v
+   FFmpeg
+     |
+     v
+HLS .m3u8 + .ts segments
+     |
+     v
+   Nginx
+     |
+     v
+   VIEWER
 
-The architecture is:
+FastAPI controls the streaming system.
 
-Source
-   |
-   v
-FFmpeg
-   |
-   v
-HLS .m3u8 + .ts files
-   |
-   v
-Nginx
-   |
-   v
-Viewer
-
-The FastAPI application manages:
+It manages:
 
 - Stream creation
 - Stream starting
@@ -103,39 +182,37 @@ The dashboard provides:
 
 2. VPS Requirements
 
-Recommended VPS:
+Recommended VPS
 
-Operating System:
-Ubuntu 22.04 LTS or newer
+Operating System
 
-CPU:
-2+ vCPU
+Ubuntu 22.04 LTS or newer.
 
-RAM:
-2 GB minimum
-4 GB+ recommended
+CPU
 
-Storage:
-20 GB minimum
+2+ vCPU recommended.
 
-Network:
-Stable internet connection
+RAM
 
-The required software is:
+2 GB minimum.
 
-Git
-Python 3
-Python virtual environment
-FFmpeg
-Nginx
-Certbot
-FastAPI
-Uvicorn
-psutil
+4 GB+ recommended if running several streams.
 
-The VPS should have a public IPv4 address.
+Storage
 
-You should also have a domain/subdomain pointing to the VPS.
+20 GB minimum.
+
+More storage may be required depending on how many streams are running.
+
+Network
+
+Stable internet connection.
+
+IP
+
+A public IPv4 address.
+
+You should also have a domain pointing to the VPS.
 
 Example:
 
@@ -144,143 +221,209 @@ www.futbol-x.xyz
 
 ---
 
-3. Fresh VPS Preparation
+3. Important Values
 
-SSH into the new VPS.
+Before installation, know these values.
 
-Example:
+🟡 EDIT THIS
+
+Replace the examples below with your actual values.
+
+YOUR_SERVER_IP
+YOUR_DOMAIN
+YOUR_STREAM_SOURCE
+
+For example:
+
+YOUR_SERVER_IP = 123.123.123.123
+YOUR_DOMAIN = futbol-x.xyz
+
+You will use these values in several sections.
+
+---
+
+4. Fresh VPS Preparation
+
+First connect to the new VPS.
+
+🟢 COPY & RUN
 
 ssh root@YOUR_SERVER_IP
 
-Check the operating system:
+Replace:
+
+YOUR_SERVER_IP
+
+with your actual VPS IP.
+
+---
+
+Check operating system
+
+🟢 COPY & RUN
 
 cat /etc/os-release
 
-Check the current user:
+You should see Ubuntu information.
+
+---
+
+Check current user
+
+🟢 COPY & RUN
 
 whoami
 
-Update the server:
+🔴 EXPECTED RESULT
 
-apt update
-apt upgrade -y
+If you are installing as root:
 
-Install basic utilities:
+root
+
+---
+
+Update the VPS
+
+🟢 COPY & RUN
+
+apt update && apt upgrade -y
+
+This updates installed packages.
+
+---
+
+Install basic utilities
+
+🟢 COPY & RUN
 
 apt install -y curl wget unzip zip nano sudo software-properties-common ca-certificates
 
-Reboot if the VPS requests it:
+---
+
+Reboot if necessary
+
+If Ubuntu asks for a reboot, run:
+
+🟢 COPY & RUN
 
 reboot
 
-Reconnect after the reboot:
+Your SSH connection will close.
+
+Wait a few seconds, then reconnect:
+
+🟢 COPY & RUN
 
 ssh root@YOUR_SERVER_IP
 
 ---
 
-4. Install Required Software
+5. Install Required Software
 
-Install the main packages:
+Install the main FutbolX dependencies.
+
+🟢 COPY & RUN
 
 apt install -y git python3 python3-pip python3-venv nginx ffmpeg
 
-Verify Git:
+This installs:
 
-git --version
-
-Verify Python:
-
-python3 --version
-
-Verify pip:
-
-pip3 --version
-
-Verify FFmpeg:
-
-ffmpeg -version
-
-Verify Nginx:
-
-nginx -v
-
-All of these commands should return version information.
+- Git
+- Python 3
+- pip
+- Python virtual environment
+- Nginx
+- FFmpeg
 
 ---
 
-5. Install Git
+6. Verify Git
 
-If Git was not installed in the previous step:
-
-apt update
-apt install -y git
-
-Verify:
+🟢 COPY & RUN
 
 git --version
 
+🔴 EXPECTED RESULT
+
+You should receive a Git version.
+
+Example:
+
+git version 2.x.x
+
 ---
 
-6. Install Python
+7. Verify Python
 
-Check Python:
+🟢 COPY & RUN
 
 python3 --version
 
-Check the virtual environment module:
+You should receive a Python version.
+
+Also test the virtual environment module:
+
+🟢 COPY & RUN
 
 python3 -m venv --help
 
-If that works, Python is ready.
+If this works, Python's virtual environment support is installed.
 
-If the venv module is missing:
+If it does not work:
+
+🟢 COPY & RUN
 
 apt install -y python3-venv
 
 ---
 
-7. Install FFmpeg
+8. Verify FFmpeg
 
-FFmpeg is responsible for receiving the media source and creating the HLS stream.
+FFmpeg receives the media source and converts it into HLS.
 
-Install:
-
-apt install -y ffmpeg
-
-Verify:
+🟢 COPY & RUN
 
 ffmpeg -version
 
-You can also check the executable location:
+Find the executable:
+
+🟢 COPY & RUN
 
 which ffmpeg
 
-Usually this returns:
+🔴 EXPECTED RESULT
+
+Usually:
 
 /usr/bin/ffmpeg
 
-Test FFmpeg:
-
-ffmpeg -hide_banner -version
-
 ---
 
-8. Install Nginx
+9. Install and Start Nginx
+
+Nginx serves the HLS files and acts as the public reverse proxy.
 
 Install:
 
+🟢 COPY & RUN
+
 apt install -y nginx
 
-Enable Nginx:
+Enable automatic startup:
+
+🟢 COPY & RUN
 
 systemctl enable nginx
 
 Start Nginx:
 
+🟢 COPY & RUN
+
 systemctl start nginx
 
-Check status:
+Check:
+
+🟢 COPY & RUN
 
 systemctl status nginx
 
@@ -288,102 +431,126 @@ Press:
 
 q
 
-to leave the status screen.
+to exit the status screen.
 
-Test the configuration:
+Test configuration:
+
+🟢 COPY & RUN
 
 nginx -t
 
-Expected result:
+🔴 EXPECTED RESULT
+
+You should see:
 
 syntax is ok
 test is successful
 
 ---
 
-9. Install Certbot
+10. Install Certbot
 
-Certbot is used to obtain HTTPS certificates.
+Certbot obtains HTTPS certificates for your domain.
 
-Install:
+🟢 COPY & RUN
 
 apt install -y certbot python3-certbot-nginx
 
 Verify:
 
+🟢 COPY & RUN
+
 certbot --version
 
-SSL will be configured after DNS and Nginx are ready.
+Do not request SSL yet.
+
+DNS and Nginx must be configured first.
 
 ---
 
-10. Clone FutbolX
+11. Clone FutbolX
 
-Go to "/opt":
+Go to "/opt".
+
+🟢 COPY & RUN
 
 cd /opt
 
 Clone the repository:
 
+🟢 COPY & RUN
+
 git clone https://github.com/epltv1/FutbolX-Media-Server.git
 
 Enter the project:
+
+🟢 COPY & RUN
 
 cd /opt/FutbolX-Media-Server
 
 Check the files:
 
+🟢 COPY & RUN
+
 ls
 
-You should see something similar to:
+You should see the FutbolX project files.
 
-config
-server
-dashboard
-README.md
-requirements.txt
+Check Git:
 
-Check Git status:
+🟢 COPY & RUN
 
 git status
 
 ---
 
-11. Create Required Directories
+12. Create Required Directories
+
+The HLS files should be stored outside the Git repository.
 
 Create the HLS directory:
 
+🟢 COPY & RUN
+
 mkdir -p /var/www/futbolx/hls
 
-Create the dashboard directory if it does not already exist:
-
-mkdir -p /opt/FutbolX-Media-Server/dashboard
-
 Set ownership:
+
+🟢 COPY & RUN
 
 chown -R www-data:www-data /var/www/futbolx
 
 Set permissions:
 
+🟢 COPY & RUN
+
 chmod -R 755 /var/www/futbolx
 
 Check:
+
+🟢 COPY & RUN
 
 ls -la /var/www/futbolx
 
 ---
 
-12. Create Python Virtual Environment
+13. Create Python Virtual Environment
 
 Enter the project:
 
+🟢 COPY & RUN
+
 cd /opt/FutbolX-Media-Server
 
-Create the virtual environment:
+Create the environment:
+
+🟢 COPY & RUN
 
 python3 -m venv venv
 
 Activate it:
+
+🟢 COPY & RUN
 
 source venv/bin/activate
 
@@ -393,99 +560,154 @@ Your terminal should now show something similar to:
 
 Upgrade pip:
 
+🟢 COPY & RUN
+
 pip install --upgrade pip
 
 ---
 
-13. Install Python Dependencies
+14. Install Python Dependencies
 
-Make sure you are inside the project:
+Make sure you are in the project:
 
-cd /opt/FutbolX-Media-Server
-
-Activate the virtual environment:
-
-source venv/bin/activate
-
-Install requirements:
-
-pip install -r requirements.txt
-
-If you need to install the packages manually:
-
-pip install fastapi "uvicorn[standard]" psutil
-
-Verify FastAPI:
-
-pip show fastapi
-
-Verify Uvicorn:
-
-pip show uvicorn
-
-Verify psutil:
-
-pip show psutil
-
----
-
-14. Test FutbolX Manually
-
-Before creating the systemd service, test the application manually.
-
-Enter the project:
+🟢 COPY & RUN
 
 cd /opt/FutbolX-Media-Server
 
 Activate the environment:
 
+🟢 COPY & RUN
+
+source venv/bin/activate
+
+Install dependencies:
+
+🟢 COPY & RUN
+
+pip install -r requirements.txt
+
+If the project does not contain a requirements file, install the required packages manually:
+
+🟢 COPY & RUN
+
+pip install fastapi "uvicorn[standard]" psutil
+
+Verify FastAPI:
+
+🟢 COPY & RUN
+
+pip show fastapi
+
+Verify Uvicorn:
+
+🟢 COPY & RUN
+
+pip show uvicorn
+
+Verify psutil:
+
+🟢 COPY & RUN
+
+pip show psutil
+
+---
+
+15. Test FutbolX Manually
+
+Do this before creating the Systemd service.
+
+Enter the project:
+
+🟢 COPY & RUN
+
+cd /opt/FutbolX-Media-Server
+
+Activate the environment:
+
+🟢 COPY & RUN
+
 source venv/bin/activate
 
 Start FastAPI:
 
+🟢 COPY & RUN
+
 uvicorn server.main:app --host 127.0.0.1 --port 8000
 
-If successful, you should see something similar to:
+🔴 EXPECTED RESULT
+
+You should see something similar to:
 
 Uvicorn running on http://127.0.0.1:8000
 
-Leave this process running.
+Do not close this SSH session yet.
 
-Open another SSH session and test:
+Open another SSH session.
+
+Test the health endpoint:
+
+🟢 COPY & RUN
 
 curl http://127.0.0.1:8000/api/health
 
-You should receive a JSON response similar to:
+🔴 EXPECTED RESULT
+
+You should receive a response similar to:
 
 {
   "status": "ok"
 }
 
-You can also test:
+Also test:
+
+🟢 COPY & RUN
 
 curl http://127.0.0.1:8000/api/streams
 
-If the application responds, FastAPI is working.
+If the API responds, FastAPI is working.
 
-Stop the manual server with:
+Return to the terminal running Uvicorn.
+
+Stop it with:
+
+🟢 PRESS
 
 CTRL+C
 
 ---
 
-15. Configure Nginx
+16. Configure Nginx
 
-The Nginx configuration connects the public domain to FutbolX.
+Nginx will:
 
-Remove the default site:
+- Receive public HTTP/HTTPS requests.
+- Forward API requests to FastAPI.
+- Serve HLS files.
+- Protect the FastAPI port from direct internet access.
+
+---
+
+Remove the default Nginx site
+
+🟢 COPY & RUN
 
 rm -f /etc/nginx/sites-enabled/default
 
-Create the FutbolX configuration:
+---
+
+Create the FutbolX Nginx configuration
+
+🔵 CREATE / EDIT FILE
+
+Run:
 
 nano /etc/nginx/sites-available/futbolx
 
-Paste the following configuration:
+🟡 EDIT THIS
+
+If your domain is different, replace the domain names in the configuration.
+
+🟢 COPY & PASTE THIS ENTIRE CONFIGURATION
 
 server {
     listen 80;
@@ -535,87 +757,120 @@ server {
     }
 }
 
-Save:
+🔵 SAVE THE FILE
+
+Inside nano:
 
 CTRL+O
 ENTER
 CTRL+X
 
-Enable the configuration:
+---
+
+Enable the FutbolX configuration
+
+🟢 COPY & RUN
 
 ln -s /etc/nginx/sites-available/futbolx /etc/nginx/sites-enabled/futbolx
 
-Test Nginx:
+If the link already exists, do not create another one.
+
+---
+
+Test Nginx
+
+🟢 COPY & RUN
 
 nginx -t
 
-If successful:
+🔴 EXPECTED RESULT
+
+syntax is ok
+test is successful
+
+Reload:
+
+🟢 COPY & RUN
 
 systemctl reload nginx
 
 ---
 
-16. Configure DNS
+17. Configure DNS
 
-Go to your domain provider.
+Go to the company where your domain is managed.
 
-Create DNS records pointing to the VPS.
+Create an A record pointing your domain to your VPS.
 
-For example:
+For:
 
-Type: A
-Name: @
-Value: YOUR_SERVER_IP
+futbol-x.xyz
 
-And:
-
-Type: A
-Name: www
-Value: YOUR_SERVER_IP
-
-For the second domain:
+Use:
 
 Type: A
 Name: @
 Value: YOUR_SERVER_IP
 
-and:
+For:
+
+www.futbol-x.xyz
+
+Use:
 
 Type: A
 Name: www
 Value: YOUR_SERVER_IP
 
-DNS propagation can take some time.
-
-Check DNS from the VPS:
-
-apt install -y dnsutils
-
-Then:
-
-dig futbol-x.xyz
-
-You should see your VPS IP.
-
-You can also check:
-
-dig www.futbol-x.xyz
-
-Do not continue with SSL until the domain resolves to the correct VPS.
+If you use "futbol-x.top", create the equivalent records for that domain.
 
 ---
 
-17. Create Systemd Service
+Verify DNS
+
+Install DNS utilities:
+
+🟢 COPY & RUN
+
+apt install -y dnsutils
+
+Check:
+
+🟢 COPY & RUN
+
+dig futbol-x.xyz
+
+And:
+
+🟢 COPY & RUN
+
+dig www.futbol-x.xyz
+
+🔴 EXPECTED RESULT
+
+The returned IP should be your VPS IP.
+
+Do not continue to SSL until DNS points to the correct VPS.
+
+---
+
+18. Create Systemd Service
 
 Systemd keeps FutbolX running in the background.
 
-It also allows FutbolX to automatically start after a VPS reboot.
+It also automatically starts FutbolX after a VPS reboot.
 
-Create the service:
+---
+
+Create the service file
+
+🔵 CREATE / EDIT FILE
+
+Run:
 
 nano /etc/systemd/system/futbolx.service
 
-Paste:
+🟢 COPY & PASTE THIS ENTIRE FILE
 
 [Unit]
 Description=FutbolX Media Server
@@ -639,164 +894,206 @@ RestartSec=5
 [Install]
 WantedBy=multi-user.target
 
-Save:
+🔵 SAVE THE FILE
 
 CTRL+O
 ENTER
 CTRL+X
 
-Reload systemd:
+---
+
+Reload Systemd
+
+🟢 COPY & RUN
 
 systemctl daemon-reload
 
-Enable FutbolX:
+---
+
+19. Start FutbolX
+
+Enable automatic startup:
+
+🟢 COPY & RUN
 
 systemctl enable futbolx
 
 Start FutbolX:
 
+🟢 COPY & RUN
+
 systemctl start futbolx
 
-Check:
+Check status:
+
+🟢 COPY & RUN
 
 systemctl status futbolx
 
-You should see:
+🔴 EXPECTED RESULT
+
+Look for:
 
 Active: active (running)
 
----
+Press:
 
-18. Start FutbolX
+q
 
-The normal command to start FutbolX is:
-
-systemctl start futbolx
-
-Enable automatic startup:
-
-systemctl enable futbolx
-
-Check:
-
-systemctl status futbolx
-
-Restart:
-
-systemctl restart futbolx
-
-Stop:
-
-systemctl stop futbolx
+to leave the status screen.
 
 ---
 
-19. Configure Firewall
+20. Configure Firewall
 
-If UFW is installed, allow SSH:
+If UFW is being used, allow SSH first.
+
+🟢 COPY & RUN
 
 ufw allow OpenSSH
 
 Allow HTTP:
 
+🟢 COPY & RUN
+
 ufw allow 80/tcp
 
 Allow HTTPS:
+
+🟢 COPY & RUN
 
 ufw allow 443/tcp
 
 Enable UFW:
 
+🟢 COPY & RUN
+
 ufw enable
 
 Check:
 
+🟢 COPY & RUN
+
 ufw status
 
-Expected ports:
+You should have access to:
 
 22
 80
 443
 
-Port "8000" does NOT need to be publicly exposed because Nginx communicates with FastAPI locally.
+⚠️ IMPORTANT
 
-Do NOT open port 8000 unnecessarily.
+Do NOT open port 8000 publicly.
+
+FastAPI listens on:
+
+127.0.0.1:8000
+
+Nginx communicates with it locally.
 
 ---
 
-20. Configure HTTPS / SSL
+21. Configure HTTPS / SSL
 
-Once DNS is working and Nginx is running, request the certificate:
+Only do this after:
+
+- DNS is correct.
+- Nginx is running.
+- The domain resolves to the VPS.
+
+For "futbol-x.xyz":
+
+🟢 COPY & RUN
 
 certbot --nginx -d futbol-x.xyz -d www.futbol-x.xyz
 
-If using the second domain:
+If using the ".top" domain:
+
+🟢 COPY & RUN
 
 certbot --nginx -d futbol-x.top -d www.futbol-x.top
 
-Certbot will ask whether HTTP should redirect to HTTPS.
+Certbot will ask about redirecting HTTP to HTTPS.
 
 Choose the HTTPS redirect option.
 
 Check certificates:
 
+🟢 COPY & RUN
+
 certbot certificates
 
 Test automatic renewal:
 
+🟢 COPY & RUN
+
 certbot renew --dry-run
 
-If the test succeeds, automatic renewal is configured.
+🔴 EXPECTED RESULT
+
+The renewal test should complete successfully.
 
 ---
 
-21. Verify Installation
+22. Verify Installation
 
-First check FastAPI:
+Test FastAPI locally:
+
+🟢 COPY & RUN
 
 curl http://127.0.0.1:8000/api/health
 
-Then check through Nginx:
+Test through Nginx:
 
-curl http://futbol-x.xyz/api/health
-
-After SSL:
+🟢 COPY & RUN
 
 curl https://futbol-x.xyz/api/health
 
-Check streams:
+Test streams:
+
+🟢 COPY & RUN
 
 curl https://futbol-x.xyz/api/streams
 
-Open the dashboard in a browser:
+Open the dashboard:
+
+🌐 OPEN IN BROWSER
 
 https://futbol-x.xyz/
 
----
-
-22. Using the Dashboard
-
-The dashboard contains:
-
-Dashboard
-Live Streams
-Stream Health
-
-The sidebar also displays:
-
-Server Online
-Server Uptime
-
-The dashboard communicates with the FastAPI API.
-
-The server should remain running through systemd.
+If the dashboard loads, the basic installation is complete.
 
 ---
 
-23. Creating a Live Stream
+23. Using the Dashboard
 
-A stream can be created with:
+The dashboard provides:
+
+- Dashboard
+- Live Streams
+- Stream Health
+- Stream uptime
+- Viewer count
+- Start controls
+- Stop controls
+- M3U8 copy button
+- Scheduled streams
+
+The sidebar also displays server information such as:
+
+- Server Online
+- Server Uptime
+
+The dashboard communicates with the FastAPI backend.
+
+Systemd keeps the backend running.
+
+---
+
+24. Creating a Live Stream
+
+A stream requires:
 
 Name
 Source URL
@@ -809,93 +1106,80 @@ Test Stream
 Source:
 YOUR_AUTHORIZED_MEDIA_SOURCE
 
-Then press:
-
-Start
-
-The API creates a stream ID.
+The server creates a stream ID.
 
 Example:
 
 abc12345
 
-The HLS output becomes:
+The HLS URL becomes:
 
 https://futbol-x.xyz/hls/abc12345/index.m3u8
+
+⚠️ IMPORTANT
 
 Only use media sources that you are authorized to stream.
 
 ---
 
-24. Scheduling a Stream
+25. Scheduling a Stream
 
-A scheduled stream can be created without a source.
+A scheduled stream can be created without immediately providing a source.
 
-For example:
+Example:
 
 Name:
 Match Stream
 
-The stream receives an ID but FFmpeg does not start.
+The stream receives an ID.
 
-The stream appears as a scheduled/offline stream.
+FFmpeg does not start until a source is provided and the stream is started.
 
-The dashboard can then display an:
-
-Add Stream
-
-button.
+The dashboard can display the scheduled/offline stream.
 
 ---
 
-25. Starting a Scheduled Stream
+26. Starting a Scheduled Stream
 
-When a source is available, add the source to the scheduled stream.
+When the source is available:
 
-Then press:
-
-Start
+1. Add the source.
+2. Press Start.
 
 The server starts FFmpeg.
 
 The stream becomes live.
 
-The "started_at" timestamp is recorded when the FFmpeg process starts successfully.
+The "started_at" timestamp is recorded when FFmpeg successfully starts.
 
 ---
 
-26. Stopping a Stream
+27. Stopping a Stream
 
-Press:
-
-Stop
-
-The server should:
+When Stop is pressed, FutbolX should:
 
 1. Stop FFmpeg.
-2. Kill the FFmpeg process.
+2. Kill the FFmpeg process if necessary.
 3. Remove the FFmpeg process from memory.
 4. Delete the stream's HLS directory.
-5. Remove the ".m3u8" file.
-6. Remove the ".ts" segments.
+5. Remove the ".m3u8" playlist.
+6. Remove ".ts" segments.
 7. Clear viewer tracking.
 8. Remove the stream from the active stream list.
 
-After stopping, the old M3U8 URL should no longer work.
-
-Example:
+For example:
 
 /hls/abc12345/index.m3u8
 
-will no longer have an active HLS playlist.
+should no longer contain an active playlist after the stream is stopped.
 
 ---
 
-27. Copying an M3U8 URL
+28. Copying an M3U8 URL
 
-For every active stream, the dashboard provides a copy button.
+Every active stream has an M3U8 URL.
 
-The generated URL follows this format:
+Format:
 
 https://YOUR_DOMAIN/hls/STREAM_ID/index.m3u8
 
@@ -903,230 +1187,367 @@ Example:
 
 https://futbol-x.xyz/hls/abc12345/index.m3u8
 
-The exact stream ID is generated automatically.
+The stream ID is generated automatically.
+
+The dashboard's Copy button should copy the complete URL.
 
 ---
 
-28. Stream Health
+29. Stream Health
 
-The Stream Health page displays server information such as:
+The Stream Health section provides information such as:
 
-Active Streams
-Total Viewers
-CPU Usage
-RAM Usage
-Server Uptime
+- Active streams
+- Total viewers
+- CPU usage
+- RAM usage
+- Server uptime
 
-The dashboard periodically refreshes the statistics.
-
-CPU and RAM statistics are obtained from the VPS itself.
+CPU and RAM information comes from the VPS.
 
 Server uptime is based on the VPS boot time.
 
 ---
 
-29. Server Logs
+30. Server Logs
 
-Check FutbolX logs:
+FutbolX logs
+
+🟢 COPY & RUN
 
 journalctl -u futbolx
 
 Follow logs live:
 
+🟢 COPY & RUN
+
 journalctl -u futbolx -f
 
-Show the latest logs:
+Show the last 100 entries:
 
-journalctl -u futbolx -n 100
+🟢 COPY & RUN
 
-Show logs since the last boot:
+journalctl -u futbolx -n 100 --no-pager
+
+Show logs since boot:
+
+🟢 COPY & RUN
 
 journalctl -u futbolx -b
 
-Nginx error log:
+---
+
+Nginx error log
+
+🟢 COPY & RUN
 
 tail -f /var/log/nginx/error.log
 
-Nginx access log:
+---
+
+Nginx access log
+
+🟢 COPY & RUN
 
 tail -f /var/log/nginx/access.log
 
 ---
 
-30. Restarting FutbolX
+31. Restarting FutbolX
 
-Restart the application:
+Restart:
+
+🟢 COPY & RUN
 
 systemctl restart futbolx
 
-Check status:
+Check:
+
+🟢 COPY & RUN
 
 systemctl status futbolx
 
 Restart Nginx:
 
+🟢 COPY & RUN
+
 systemctl restart nginx
 
-Check Nginx:
+Check:
+
+🟢 COPY & RUN
 
 systemctl status nginx
 
 ---
 
-31. Stopping FutbolX
+32. Stopping FutbolX
 
-Stop the application:
+Stop:
+
+🟢 COPY & RUN
 
 systemctl stop futbolx
 
 Check:
+
+🟢 COPY & RUN
 
 systemctl status futbolx
 
 Start again:
 
+🟢 COPY & RUN
+
 systemctl start futbolx
 
 Disable automatic startup:
 
+🟢 COPY & RUN
+
 systemctl disable futbolx
 
-Normally, keep FutbolX enabled:
+Normally, keep automatic startup enabled:
+
+🟢 COPY & RUN
 
 systemctl enable futbolx
 
 ---
 
-32. Updating FutbolX
+33. Updating FutbolX
 
-Before updating, check the current directory:
+Before updating:
+
+🟢 COPY & RUN
 
 cd /opt/FutbolX-Media-Server
 
-Check status:
+Check Git:
+
+🟢 COPY & RUN
 
 git status
 
 Stop FutbolX:
 
+🟢 COPY & RUN
+
 systemctl stop futbolx
 
-Download the latest repository changes:
+Pull the latest code:
+
+🟢 COPY & RUN
 
 git pull
 
 Activate the virtual environment:
 
+🟢 COPY & RUN
+
 source venv/bin/activate
 
 Update dependencies:
 
+🟢 COPY & RUN
+
 pip install -r requirements.txt
 
-Restart:
+Start FutbolX:
 
-systemctl restart futbolx
+🟢 COPY & RUN
+
+systemctl start futbolx
 
 Check:
+
+🟢 COPY & RUN
 
 systemctl status futbolx
 
 Test:
 
+🟢 COPY & RUN
+
 curl http://127.0.0.1:8000/api/health
 
 ---
 
-33. Moving FutbolX to Another VPS
+34. Moving FutbolX to Another VPS
 
-This is the important migration procedure.
+This is the main migration procedure.
 
-The easiest migration is:
+The important thing to understand is that the application code lives in GitHub.
 
-New VPS
+The new VPS mainly needs:
+
+FutbolX code
++
+Python environment
++
+HLS directory
++
+Nginx configuration
++
+Systemd service
++
+DNS
++
+SSL
+
+---
+
+MIGRATION OVERVIEW
+
+NEW VPS
    |
-   +-- Install software
+   +-- Install Ubuntu packages
    |
-   +-- Clone GitHub repository
+   +-- Clone FutbolX
    |
-   +-- Create directories
+   +-- Create HLS directory
    |
-   +-- Install Python dependencies
+   +-- Create Python venv
+   |
+   +-- Install dependencies
    |
    +-- Configure Nginx
    |
-   +-- Configure systemd
+   +-- Configure Systemd
+   |
+   +-- Start FutbolX
    |
    +-- Point DNS to new VPS
    |
    +-- Install SSL
    |
-   +-- Start FutbolX
-
-Step 1 — Prepare the new VPS
-
-SSH into the new VPS:
-
-ssh root@NEW_SERVER_IP
-
-Update:
-
-apt update
-apt upgrade -y
-
-Install dependencies:
-
-apt install -y git python3 python3-pip python3-venv nginx ffmpeg curl wget unzip zip nano sudo ca-certificates certbot python3-certbot-nginx
+   +-- Test
 
 ---
 
-Step 2 — Clone the repository
+Step 1 — Connect to the new VPS
+
+🟢 COPY & RUN
+
+ssh root@NEW_SERVER_IP
+
+🟡 EDIT THIS
+
+Replace:
+
+NEW_SERVER_IP
+
+with the new VPS IP.
+
+---
+
+Step 2 — Update the VPS
+
+🟢 COPY & RUN
+
+apt update && apt upgrade -y
+
+---
+
+Step 3 — Install all required software
+
+🟢 COPY & RUN
+
+apt install -y git python3 python3-pip python3-venv nginx ffmpeg curl wget unzip zip nano sudo ca-certificates certbot python3-certbot-nginx dnsutils
+
+---
+
+Step 4 — Clone FutbolX
+
+🟢 COPY & RUN
 
 cd /opt
 
+Then:
+
+🟢 COPY & RUN
+
 git clone https://github.com/epltv1/FutbolX-Media-Server.git
+
+Enter:
+
+🟢 COPY & RUN
 
 cd /opt/FutbolX-Media-Server
 
 ---
 
-Step 3 — Create directories
+Step 5 — Create HLS directory
+
+🟢 COPY & RUN
 
 mkdir -p /var/www/futbolx/hls
 
+Then:
+
+🟢 COPY & RUN
+
 chown -R www-data:www-data /var/www/futbolx
+
+Then:
+
+🟢 COPY & RUN
 
 chmod -R 755 /var/www/futbolx
 
 ---
 
-Step 4 — Create virtual environment
+Step 6 — Create Python environment
+
+🟢 COPY & RUN
 
 cd /opt/FutbolX-Media-Server
 
 python3 -m venv venv
 
+Activate:
+
 source venv/bin/activate
+
+Upgrade pip:
+
+pip install --upgrade pip
 
 ---
 
-Step 5 — Install dependencies
+Step 7 — Install Python dependencies
 
-pip install --upgrade pip
+🟢 COPY & RUN
 
 pip install -r requirements.txt
 
 ---
 
-Step 6 — Configure Nginx
+Step 8 — Configure Nginx
 
-Create:
+🔵 CREATE / EDIT FILE
 
 nano /etc/nginx/sites-available/futbolx
 
-Paste the Nginx configuration from this README.
+🟢 COPY & PASTE
 
-Enable it:
+Copy the entire Nginx configuration from Section 16.
+
+If your domain changed, update the domain names first.
+
+Save:
+
+CTRL+O
+ENTER
+CTRL+X
+
+Enable:
+
+🟢 COPY & RUN
+
+rm -f /etc/nginx/sites-enabled/default
+
+Then:
 
 ln -s /etc/nginx/sites-available/futbolx /etc/nginx/sites-enabled/futbolx
 
@@ -1140,15 +1561,25 @@ systemctl reload nginx
 
 ---
 
-Step 7 — Configure systemd
+Step 9 — Configure Systemd
 
-Create:
+🔵 CREATE / EDIT FILE
 
 nano /etc/systemd/system/futbolx.service
 
-Paste the systemd configuration from this README.
+🟢 COPY & PASTE
 
-Then:
+Copy the entire Systemd configuration from Section 18.
+
+Save:
+
+CTRL+O
+ENTER
+CTRL+X
+
+Reload:
+
+🟢 COPY & RUN
 
 systemctl daemon-reload
 
@@ -1160,55 +1591,73 @@ Start:
 
 systemctl start futbolx
 
+Check:
+
+systemctl status futbolx
+
 ---
 
-Step 8 — Move DNS
+Step 10 — Move DNS
 
-Change the domain's A records from the old VPS IP to the new VPS IP.
+Go to your domain provider.
+
+Change the A record from the old VPS IP to the new VPS IP.
 
 Example:
 
-OLD VPS:
+OLD VPS
 1.2.3.4
 
-NEW VPS:
+NEW VPS
 5.6.7.8
 
 Change:
 
-futbol-x.xyz -> 5.6.7.8
-
-Wait for DNS propagation.
+futbol-x.xyz → 5.6.7.8
 
 Verify:
 
+🟢 COPY & RUN
+
 dig futbol-x.xyz
+
+The result should show the new VPS IP.
 
 ---
 
-Step 9 — Install SSL
+Step 11 — Configure SSL
 
-Once DNS points to the new VPS:
+After DNS points to the new VPS:
+
+🟢 COPY & RUN
 
 certbot --nginx -d futbol-x.xyz -d www.futbol-x.xyz
 
-Then:
+Then test renewal:
+
+🟢 COPY & RUN
 
 certbot renew --dry-run
 
 ---
 
-Step 10 — Verify
+Step 12 — Final migration test
 
-Check:
+Check FutbolX:
+
+🟢 COPY & RUN
 
 systemctl status futbolx
 
-Check:
+Check Nginx:
+
+🟢 COPY & RUN
 
 systemctl status nginx
 
-Check API:
+Test API:
+
+🟢 COPY & RUN
 
 curl https://futbol-x.xyz/api/health
 
@@ -1216,75 +1665,112 @@ Open:
 
 https://futbol-x.xyz/
 
-The new VPS is now running FutbolX.
+Test stream creation, starting, stopping, and M3U8 playback.
 
 ---
 
-34. Backing Up FutbolX
+35. Backing Up FutbolX
 
-The application itself is stored in GitHub, so the main code does not need to be manually backed up.
+The application code is stored in GitHub.
 
 Check the repository:
 
-cd /opt/FutbolX-Media-Server
+🟢 COPY & RUN
 
+cd /opt/FutbolX-Media-Server
 git status
 
-If you make important local changes, commit and push them to GitHub.
+If you have local code changes that should be preserved:
 
-Example:
+🟢 COPY & RUN
 
 git add .
 
+Then:
+
 git commit -m "Update FutbolX"
+
+Then:
 
 git push
 
+---
+
 Backup Nginx
 
-Create a backup directory:
+Create backup directory:
+
+🟢 COPY & RUN
 
 mkdir -p /root/futbolx-backup
 
 Copy Nginx configuration:
 
+🟢 COPY & RUN
+
 cp /etc/nginx/sites-available/futbolx /root/futbolx-backup/
-
-Backup systemd
-
-cp /etc/systemd/system/futbolx.service /root/futbolx-backup/
-
-Backup dashboard/server configuration
-
-If configuration files contain custom settings:
-
-cp -r /opt/FutbolX-Media-Server /root/futbolx-backup/
-
-Be careful with copying the virtual environment because it is normally unnecessary and can be recreated.
 
 ---
 
-35. Restoring FutbolX
+Backup Systemd
 
-On a new VPS:
+🟢 COPY & RUN
 
-cd /opt
+cp /etc/systemd/system/futbolx.service /root/futbolx-backup/
+
+---
+
+Backup custom project configuration
+
+If you have important local configuration files:
+
+🟢 COPY & RUN
+
+cp -r /opt/FutbolX-Media-Server /root/futbolx-backup/
+
+⚠️ IMPORTANT
+
+The Python "venv" normally does not need to be backed up.
+
+It can be recreated on the new VPS.
+
+---
+
+36. Restoring FutbolX
+
+On the new VPS:
 
 Clone the repository:
 
+🟢 COPY & RUN
+
+cd /opt
+
 git clone https://github.com/epltv1/FutbolX-Media-Server.git
 
-Install dependencies again:
+Create the Python environment:
+
+🟢 COPY & RUN
 
 cd /opt/FutbolX-Media-Server
 
 python3 -m venv venv
 
+Activate:
+
 source venv/bin/activate
+
+Install:
 
 pip install -r requirements.txt
 
+Create HLS directory:
+
+mkdir -p /var/www/futbolx/hls
+
 Restore Nginx:
+
+🟢 COPY & RUN
 
 cp /root/futbolx-backup/futbolx /etc/nginx/sites-available/futbolx
 
@@ -1292,7 +1778,9 @@ Enable:
 
 ln -s /etc/nginx/sites-available/futbolx /etc/nginx/sites-enabled/futbolx
 
-Restore systemd:
+Restore Systemd:
+
+🟢 COPY & RUN
 
 cp /root/futbolx-backup/futbolx.service /etc/systemd/system/futbolx.service
 
@@ -1308,19 +1796,23 @@ Start:
 
 systemctl start futbolx
 
-Test:
+Test Nginx:
 
 nginx -t
+
+Restart Nginx:
 
 systemctl restart nginx
 
 ---
 
-36. Troubleshooting
+37. Troubleshooting
 
 FutbolX will not start
 
 Check:
+
+🟢 COPY & RUN
 
 systemctl status futbolx
 
@@ -1342,25 +1834,31 @@ Port 8000 is not responding
 
 Check:
 
+🟢 COPY & RUN
+
 ss -lntp | grep 8000
 
-Try:
+Then:
 
 curl http://127.0.0.1:8000/api/health
 
-If it does not respond, check:
+If it fails:
 
 systemctl status futbolx
+
+And:
+
+journalctl -u futbolx -n 100 --no-pager
 
 ---
 
 Nginx is not working
 
-Test:
+🟢 COPY & RUN
 
 nginx -t
 
-Check:
+Then:
 
 systemctl status nginx
 
@@ -1374,9 +1872,11 @@ Domain does not open
 
 Check DNS:
 
+🟢 COPY & RUN
+
 dig futbol-x.xyz
 
-Make sure the returned IP is the VPS IP.
+The returned IP must match your VPS.
 
 Check Nginx:
 
@@ -1386,19 +1886,19 @@ Check firewall:
 
 ufw status
 
-Make sure ports "80" and "443" are allowed.
+Ports 80 and 443 should be allowed.
 
 ---
 
 SSL does not work
 
-First verify DNS.
+Check certificates:
 
-Then:
+🟢 COPY & RUN
 
 certbot certificates
 
-Try:
+Test renewal:
 
 certbot renew --dry-run
 
@@ -1410,20 +1910,27 @@ nginx -t
 
 HLS stream does not work
 
-Check the HLS directory:
+Check HLS directory:
+
+🟢 COPY & RUN
 
 ls -lah /var/www/futbolx/hls
 
-Check whether a stream directory exists:
+Check a stream:
+
+🟡 EDIT THIS
+
+Replace "STREAM_ID" with the actual stream ID.
 
 ls -lah /var/www/futbolx/hls/STREAM_ID
 
 You should see files similar to:
 
 index.m3u8
-segment*.ts
+segment1.ts
+segment2.ts
 
-Check FutbolX:
+Check FutbolX logs:
 
 journalctl -u futbolx -f
 
@@ -1435,15 +1942,15 @@ ps aux | grep ffmpeg
 
 FFmpeg is not running
 
-Check:
+🟢 COPY & RUN
 
 ps aux | grep ffmpeg
 
-Check:
+Check logs:
 
 journalctl -u futbolx -n 100 --no-pager
 
-Verify FFmpeg:
+Check FFmpeg:
 
 which ffmpeg
 
@@ -1455,11 +1962,15 @@ Stream stops unexpectedly
 
 Check:
 
+🟢 COPY & RUN
+
 journalctl -u futbolx -f
 
-Check server resources:
+Check RAM:
 
 free -h
+
+Check disk:
 
 df -h
 
@@ -1467,63 +1978,65 @@ Check CPU:
 
 top
 
-Also verify that the source is available and that you are authorized to use it.
+Also verify that the media source is still available and that you are authorized to use it.
 
 ---
 
 VPS disk is full
 
-Check:
+Check disk:
+
+🟢 COPY & RUN
 
 df -h
 
-Check the HLS directory:
+Check HLS storage:
 
 du -sh /var/www/futbolx/hls
 
-Check the project:
+Check project:
 
 du -sh /opt/FutbolX-Media-Server
 
-Check system logs:
+Check journal storage:
 
 journalctl --disk-usage
 
-Clean old system logs if necessary:
+If necessary, remove old system logs:
 
 journalctl --vacuum-time=7d
 
 ---
 
-37. Useful Commands
+38. Useful Commands
 
 FutbolX
 
-Start:
+Start
 
 systemctl start futbolx
 
-Stop:
+Stop
 
 systemctl stop futbolx
 
-Restart:
+Restart
 
 systemctl restart futbolx
 
-Status:
+Status
 
 systemctl status futbolx
 
-Enable startup:
+Enable startup
 
 systemctl enable futbolx
 
-Disable startup:
+Disable startup
 
 systemctl disable futbolx
 
-Logs:
+Live logs
 
 journalctl -u futbolx -f
 
@@ -1531,27 +2044,27 @@ journalctl -u futbolx -f
 
 Nginx
 
-Start:
+Start
 
 systemctl start nginx
 
-Stop:
+Stop
 
 systemctl stop nginx
 
-Restart:
+Restart
 
 systemctl restart nginx
 
-Reload:
+Reload
 
 systemctl reload nginx
 
-Status:
+Status
 
 systemctl status nginx
 
-Test:
+Test configuration
 
 nginx -t
 
@@ -1559,15 +2072,15 @@ nginx -t
 
 FFmpeg
 
-Check:
+Version
 
 ffmpeg -version
 
-Find executable:
+Location
 
 which ffmpeg
 
-Check running processes:
+Running processes
 
 ps aux | grep ffmpeg
 
@@ -1575,52 +2088,52 @@ ps aux | grep ffmpeg
 
 Python
 
-Check:
+Version
 
 python3 --version
 
-Activate environment:
+Activate environment
 
 cd /opt/FutbolX-Media-Server
 source venv/bin/activate
 
-Install requirements:
+Install requirements
 
 pip install -r requirements.txt
 
 ---
 
-Server Resources
+Server resources
 
-CPU/memory:
+CPU / processes
 
 top
 
-Memory:
+Memory
 
 free -h
 
-Disk:
+Disk
 
 df -h
 
-Disk usage:
+HLS disk usage
 
 du -sh /var/www/futbolx/hls
 
-Network ports:
+Network ports
 
 ss -lntp
 
-VPS uptime:
+VPS uptime
 
 uptime
 
 ---
 
-38. Project Structure
+39. Project Structure
 
-The project should look approximately like:
+The project should approximately look like:
 
 FutbolX-Media-Server/
 │
@@ -1658,11 +2171,11 @@ A running stream may create:
     ├── segment2.ts
     └── ...
 
-When a stream is stopped, its HLS files should be removed.
+When a stream is stopped, FutbolX should remove its HLS files.
 
 ---
 
-39. Production Architecture
+40. Production Architecture
 
 The production setup is:
 
@@ -1686,7 +2199,7 @@ The production setup is:
           v
    Authorized source
 
-Systemd keeps FastAPI running:
+Systemd:
 
 systemd
    |
@@ -1706,29 +2219,28 @@ FastAPI
 
 Nginx handles:
 
-HTTPS
-Reverse proxy
-HLS delivery
-Static media delivery
-Domain routing
+- HTTPS
+- Reverse proxy
+- HLS delivery
+- Domain routing
 
 FastAPI handles:
 
-API
-Dashboard backend
-Stream management
-Viewer management
-Health information
+- API
+- Dashboard backend
+- Stream management
+- Viewer management
+- Health information
 
 FFmpeg handles:
 
-Media input
-HLS generation
-Segment creation
+- Media input
+- HLS generation
+- Segment creation
 
 ---
 
-40. Security Notes
+41. Security Notes
 
 Keep FastAPI private
 
@@ -1736,7 +2248,7 @@ FastAPI listens on:
 
 127.0.0.1:8000
 
-Do not expose port "8000" directly to the internet unless there is a specific reason.
+Do not expose port 8000 directly to the internet.
 
 Nginx should be the public entry point.
 
@@ -1748,7 +2260,7 @@ Production access should use:
 
 https://
 
-rather than plain:
+instead of:
 
 http://
 
@@ -1756,10 +2268,9 @@ http://
 
 Keep the VPS updated
 
-Regularly run:
+🟢 COPY & RUN
 
-apt update
-apt upgrade -y
+apt update && apt upgrade -y
 
 ---
 
@@ -1771,116 +2282,214 @@ Do not expose unnecessary ports.
 
 Check:
 
+🟢 COPY & RUN
+
 ufw status
 
 ---
 
 Monitor disk space
 
-HLS streams create media segments.
+HLS streams continuously create media segments.
 
-Regularly check:
+Check regularly:
+
+🟢 COPY & RUN
 
 df -h
 
-and:
+And:
 
 du -sh /var/www/futbolx/hls
 
 ---
 
-COMPLETE FRESH-VPS INSTALLATION CHEAT SHEET
+42. Complete Fresh VPS Installation
 
-For a completely fresh Ubuntu VPS, the basic installation flow is:
+This is the quick installation path.
+
+Use this when you already understand the detailed instructions above.
+
+---
+
+STEP 1 — Update VPS
+
+🟢 COPY & RUN
 
 apt update && apt upgrade -y
 
-apt install -y git python3 python3-pip python3-venv nginx ffmpeg curl wget unzip zip nano sudo ca-certificates certbot python3-certbot-nginx
+---
+
+STEP 2 — Install software
+
+🟢 COPY & RUN
+
+apt install -y git python3 python3-pip python3-venv nginx ffmpeg curl wget unzip zip nano sudo ca-certificates certbot python3-certbot-nginx dnsutils
+
+---
+
+STEP 3 — Clone FutbolX
+
+🟢 COPY & RUN
 
 cd /opt
-
 git clone https://github.com/epltv1/FutbolX-Media-Server.git
-
 cd /opt/FutbolX-Media-Server
 
+---
+
+STEP 4 — Create HLS directory
+
+🟢 COPY & RUN
+
 mkdir -p /var/www/futbolx/hls
-
 chown -R www-data:www-data /var/www/futbolx
-
 chmod -R 755 /var/www/futbolx
 
+---
+
+STEP 5 — Create Python environment
+
+🟢 COPY & RUN
+
+cd /opt/FutbolX-Media-Server
 python3 -m venv venv
-
 source venv/bin/activate
-
 pip install --upgrade pip
-
 pip install -r requirements.txt
 
-Test:
+---
+
+STEP 6 — Test FutbolX
+
+🟢 COPY & RUN
 
 uvicorn server.main:app --host 127.0.0.1 --port 8000
 
-In another SSH session:
+Open another SSH session.
+
+🟢 COPY & RUN
 
 curl http://127.0.0.1:8000/api/health
 
-Then configure Nginx:
+Stop the test server with:
+
+CTRL+C
+
+---
+
+STEP 7 — Configure Nginx
+
+🔵 CREATE / EDIT FILE
 
 nano /etc/nginx/sites-available/futbolx
 
+🟢 COPY & PASTE
+
+Copy the complete Nginx configuration from Section 16.
+
+Save:
+
+CTRL+O
+ENTER
+CTRL+X
+
 Enable:
 
+🟢 COPY & RUN
+
+rm -f /etc/nginx/sites-enabled/default
 ln -s /etc/nginx/sites-available/futbolx /etc/nginx/sites-enabled/futbolx
-
-Test:
-
 nginx -t
-
-Reload:
-
 systemctl reload nginx
 
-Create systemd:
+---
+
+STEP 8 — Configure Systemd
+
+🔵 CREATE / EDIT FILE
 
 nano /etc/systemd/system/futbolx.service
 
+🟢 COPY & PASTE
+
+Copy the complete Systemd configuration from Section 18.
+
+Save:
+
+CTRL+O
+ENTER
+CTRL+X
+
 Then:
 
+🟢 COPY & RUN
+
 systemctl daemon-reload
-
 systemctl enable futbolx
-
 systemctl start futbolx
-
-Check:
-
 systemctl status futbolx
 
-Configure firewall:
+---
+
+STEP 9 — Configure firewall
+
+🟢 COPY & RUN
 
 ufw allow OpenSSH
 ufw allow 80/tcp
 ufw allow 443/tcp
 ufw enable
+ufw status
 
-After DNS points to the VPS:
+---
+
+STEP 10 — Configure DNS
+
+Point:
+
+futbol-x.xyz
+www.futbol-x.xyz
+
+to:
+
+YOUR_SERVER_IP
+
+Verify:
+
+🟢 COPY & RUN
+
+dig futbol-x.xyz
+
+---
+
+STEP 11 — Install SSL
+
+🟢 COPY & RUN
 
 certbot --nginx -d futbol-x.xyz -d www.futbol-x.xyz
 
-Finally:
+Test renewal:
+
+certbot renew --dry-run
+
+---
+
+STEP 12 — Final test
+
+🟢 COPY & RUN
 
 curl https://futbol-x.xyz/api/health
 
-Open:
+Then open:
 
 https://futbol-x.xyz/
 
 ---
 
-FINAL CHECKLIST
+43. Final Installation Checklist
 
-Before considering the installation complete, verify every item:
+Before considering the installation complete:
 
 [ ] VPS updated
 [ ] Git installed
@@ -1904,7 +2513,7 @@ Before considering the installation complete, verify every item:
 [ ] HTTPS working
 [ ] API responding
 [ ] Dashboard loading
-[ ] HLS directory accessible
+[ ] HLS directory created
 [ ] Stream creation tested
 [ ] Stream start tested
 [ ] Stream stop tested
@@ -1914,66 +2523,123 @@ Before considering the installation complete, verify every item:
 
 ---
 
-IMPORTANT PATHS
+44. Important Paths
 
-FutbolX project:
+FutbolX project
 
 /opt/FutbolX-Media-Server
 
-Python virtual environment:
+Python virtual environment
 
 /opt/FutbolX-Media-Server/venv
 
-HLS directory:
+HLS directory
 
 /var/www/futbolx/hls
 
-Nginx configuration:
+Nginx configuration
 
 /etc/nginx/sites-available/futbolx
 
-Enabled Nginx configuration:
+Enabled Nginx configuration
 
 /etc/nginx/sites-enabled/futbolx
 
-Systemd service:
+Systemd service
 
 /etc/systemd/system/futbolx.service
 
-Nginx logs:
+Nginx logs
 
 /var/log/nginx/
 
 ---
 
-QUICK MIGRATION FORMULA
+45. Quick Migration Formula
 
-When moving FutbolX to a new VPS, remember:
+When moving FutbolX to a new VPS:
 
 1. Get new VPS
-2. Install Ubuntu packages
+       ↓
+2. Update VPS
+       ↓
 3. Install Git/Python/FFmpeg/Nginx/Certbot
+       ↓
 4. Clone FutbolX
+       ↓
 5. Create /var/www/futbolx/hls
+       ↓
 6. Create Python venv
+       ↓
 7. Install requirements
+       ↓
 8. Configure Nginx
-9. Configure systemd
+       ↓
+9. Configure Systemd
+       ↓
 10. Start FutbolX
+       ↓
 11. Point DNS to new VPS
+       ↓
 12. Install SSL
+       ↓
 13. Test API
+       ↓
 14. Test dashboard
-15. Test a stream
+       ↓
+15. Test stream
 
 The GitHub repository contains the application code.
 
-The VPS-specific configuration consists mainly of:
+The VPS-specific setup mainly consists of:
 
 Nginx
 Systemd
 DNS
 SSL
 HLS directory
+Python virtual environment
 
-This means FutbolX can be rebuilt on a new VPS without manually rebuilding the entire application from scratch.
+Therefore, FutbolX can be rebuilt on a new VPS without manually rebuilding the application from scratch.
+
+---
+
+🏁 FINAL REMINDER
+
+When using this README on a new VPS:
+
+🟢 GREEN = COPY/RUN
+
+If something is under:
+
+🟢 COPY & RUN
+
+paste it into SSH.
+
+🔵 BLUE = CREATE FILE
+
+If something says:
+
+🔵 CREATE / EDIT FILE
+
+open the specified file with "nano", then paste the complete configuration provided.
+
+🟡 YELLOW = REPLACE
+
+If something says:
+
+🟡 EDIT THIS
+
+replace the placeholder with your real domain, IP, stream source, or other value.
+
+🔴 RED = EXPECTED RESULT
+
+Do not copy it.
+
+It only tells you what the VPS should return.
+
+---
+
+END
+
+FutbolX Media Server — VPS Installation & Migration Guide
