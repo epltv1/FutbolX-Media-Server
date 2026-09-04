@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>FutbolX Media Server</title>
+
+    <link
+        rel="stylesheet"
+        href="/dashboard/style.css"
+    >
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- SIDEBAR -->
+
+    <aside class="sidebar">
+
+        <div class="brand">
+            <div class="brand-logo">FX</div>
+
+            <div>
+                <h1>FutbolX</h1>
+                <span>Media Server</span>
+            </div>
+        </div>
+
+
+        <nav>
+
+            <button
+                class="nav-item active"
+                data-page="dashboard"
+            >
+                <span class="nav-icon">⌂</span>
+                Dashboard
+            </button>
+
+            <button
+                class="nav-item"
+                data-page="streams"
+            >
+                <span class="nav-icon">▶</span>
+                Live Streams
+            </button>
+
+            <button
+                class="nav-item"
+                data-page="health"
+            >
+                <span class="nav-icon">◉</span>
+                Stream Health
+            </button>
+
+        </nav>
+
+
+        <div class="sidebar-status">
+
+            <div class="status-dot"></div>
+
+            <div>
+                <strong>Server Online</strong>
+                <span id="sidebarUptime">
+                    Loading uptime...
+                </span>
+            </div>
+
+        </div>
+
+    </aside>
+
+
+    <!-- MAIN -->
+
+    <main class="main">
+
+        <!-- HEADER -->
+
+        <header class="topbar">
+
+            <div>
+                <div class="breadcrumb">
+                    FUTBOLX / <span id="pageName">DASHBOARD</span>
+                </div>
+
+                <h2 id="pageTitle">
+                    Dashboard
+                </h2>
+            </div>
+
+
+            <div class="server-badge">
+
+                <span class="status-dot"></span>
+
+                <span>SERVER ONLINE</span>
+
+            </div>
+
+        </header>
+
+
+        <!-- DASHBOARD PAGE -->
+
+        <section
+            id="dashboardPage"
+            class="page active"
+        >
+
+            <div class="page-intro">
+
+                <div>
+                    <h3>Stream Control</h3>
+
+                    <p>
+                        Create, schedule and manage your
+                        FutbolX streams.
+                    </p>
+                </div>
+
+            </div>
+
+
+            <!-- CREATE STREAM -->
+
+            <div class="panel">
+
+                <div class="panel-header">
+
+                    <div>
+                        <h3>Create Stream</h3>
+
+                        <p>
+                            Add a source now or create a
+                            scheduled stream for later.
+                        </p>
+                    </div>
+
+                </div>
+
+
+                <form id="createStreamForm">
+
+                    <div class="form-grid">
+
+                        <div class="field">
+
+                            <label>
+                                Stream Name
+                            </label>
+
+                            <input
+                                id="streamName"
+                                type="text"
+                                placeholder="e.g. Arsenal vs Chelsea"
+                                required
+                            >
+
+                        </div>
+
+
+                        <div class="field">
+
+                            <label>
+                                Source URL
+                                <span>(optional)</span>
+                            </label>
+
+                            <input
+                                id="streamSource"
+                                type="url"
+                                placeholder="https://example.com/live.m3u8"
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-actions">
+
+                        <button
+                            class="btn primary"
+                            type="submit"
+                        >
+                            <span>＋</span>
+                            Create Stream
+                        </button>
+
+                        <span class="form-note">
+                            Leave source empty to create
+                            a scheduled stream.
+                        </span>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+
+            <!-- QUICK STATS -->
+
+            <div class="stats-grid">
+
+                <div class="stat-card">
+
+                    <div class="stat-label">
+                        Active Streams
+                    </div>
+
+                    <div
+                        class="stat-value"
+                        id="dashboardActive"
+                    >
+                        0
+                    </div>
+
+                    <div class="stat-sub">
+                        Currently broadcasting
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-label">
+                        Total Viewers
+                    </div>
+
+                    <div
+                        class="stat-value"
+                        id="dashboardViewers"
+                    >
+                        0
+                    </div>
+
+                    <div class="stat-sub">
+                        Across all streams
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-label">
+                        CPU Usage
+                    </div>
+
+                    <div
+                        class="stat-value"
+                        id="dashboardCpu"
+                    >
+                        0%
+                    </div>
+
+                    <div class="stat-sub">
+                        VPS processor
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-label">
+                        RAM Usage
+                    </div>
+
+                    <div
+                        class="stat-value"
+                        id="dashboardRam"
+                    >
+                        0%
+                    </div>
+
+                    <div class="stat-sub">
+                        VPS memory
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- RECENT STREAMS -->
+
+            <div class="panel">
+
+                <div class="panel-header">
+
+                    <div>
+                        <h3>Streams</h3>
+
+                        <p>
+                            Current stream activity.
+                        </p>
+                    </div>
+
+                    <button
+                        class="btn small"
+                        data-page="streams"
+                    >
+                        View All
+                    </button>
+
+                </div>
+
+
+                <div id="dashboardStreams"
+                     class="stream-list">
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- LIVE STREAMS PAGE -->
+
+        <section
+            id="streamsPage"
+            class="page"
+        >
+
+            <div class="page-intro">
+
+                <div>
+                    <h3>Live Streams</h3>
+
+                    <p>
+                        Monitor and control all your streams.
+                    </p>
+                </div>
+
+            </div>
+
+
+            <div
+                id="streamsContainer"
+                class="live-grid"
+            >
+            </div>
+
+        </section>
+
+
+        <!-- HEALTH PAGE -->
+
+        <section
+            id="healthPage"
+            class="page"
+        >
+
+            <div class="page-intro">
+
+                <div>
+                    <h3>Stream Health</h3>
+
+                    <p>
+                        Real-time VPS and streaming statistics.
+                    </p>
+                </div>
+
+            </div>
+
+
+            <div class="stats-grid">
+
+                <div class="stat-card large">
+
+                    <div class="stat-label">
+                        Active Streams
+                    </div>
+
+                    <div
+                        class="stat-value"
+                        id="healthActive"
+                    >
+                        0
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card large">
+
+                    <div class="stat-label">
+                        Total Viewers
+                    </div>
+
+                    <div
+                        class="stat-value"
+                        id="healthViewers"
+                    >
+                        0
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card large">
+
+                    <div class="stat-label">
+                        Server Uptime
+                    </div>
+
+                    <div
+                        class="stat-value uptime-value"
+                        id="healthUptime"
+                    >
+                        --
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="health-grid">
+
+                <div class="panel health-card">
+
+                    <div class="health-title">
+                        CPU
+                    </div>
+
+                    <div
+                        class="health-number"
+                        id="healthCpu"
+                    >
+                        0%
+                    </div>
+
+                    <div class="progress">
+                        <div
+                            id="cpuBar"
+                            class="progress-fill"
+                        ></div>
+                    </div>
+
+                    <span>
+                        Processor usage
+                    </span>
+
+                </div>
+
+
+                <div class="panel health-card">
+
+                    <div class="health-title">
+                        RAM
+                    </div>
+
+                    <div
+                        class="health-number"
+                        id="healthRam"
+                    >
+                        0%
+                    </div>
+
+                    <div class="progress">
+                        <div
+                            id="ramBar"
+                            class="progress-fill"
+                        ></div>
+                    </div>
+
+                    <span>
+                        Memory usage
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div class="panel">
+
+                <div class="panel-header">
+
+                    <div>
+                        <h3>Server Information</h3>
+                    </div>
+
+                </div>
+
+                <div class="server-info">
+
+                    <div>
+                        <span>Status</span>
+                        <strong class="online-text">
+                            Online
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span>Streams</span>
+                        <strong id="healthStreams">
+                            0
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span>Viewers</span>
+                        <strong id="healthViewers2">
+                            0
+                        </strong>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+
+<!-- SOURCE MODAL -->
+
+<div
+    id="sourceModal"
+    class="modal hidden"
+>
+
+    <div class="modal-box">
+
+        <div class="modal-header">
+
+            <div>
+                <h3>Add Stream Source</h3>
+
+                <p id="modalStreamName"></p>
+            </div>
+
+            <button
+                id="closeModal"
+                class="close-btn"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <form id="sourceForm">
+
+            <input
+                id="modalSource"
+                type="url"
+                placeholder="https://example.com/live.m3u8"
+                required
+            >
+
+            <div class="modal-actions">
+
+                <button
+                    type="button"
+                    id="cancelModal"
+                    class="btn"
+                >
+                    Cancel
+                </button>
+
+                <button
+                    type="submit"
+                    class="btn primary"
+                >
+                    Save & Start
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<div
+    id="toast"
+    class="toast"
+>
+</div>
+
+
+<script src="/dashboard/app.js"></script>
+
+</body>
+                          </html>
